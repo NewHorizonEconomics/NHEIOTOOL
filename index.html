@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Filterable Inputs</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:2rem;max-width:1000px}
+  h1{font-size:1.5rem;margin:0 0 1rem}
+  .grid{display:grid;gap:1rem}
+  @media (min-width:800px){.filters{grid-template-columns:1fr 1fr 2fr}.row3{grid-template-columns:2fr 1fr}}
+  select,input{padding:.5rem;border:1px solid #ddd;border-radius:10px}
+  button{padding:.6rem 1rem;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+  button.primary{background:#111;color:#fff;border-color:#111}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:.6rem;border-bottom:1px solid #eee;text-align:left}
+  th:last-child, td:last-child{text-align:right}
+  .card{border:1px solid #eee;border-radius:12px;padding:1rem}
+  .muted{color:#666;font-size:.9rem}
+</style>
+</head>
+<body>
+  <h1>Filterable Inputs</h1>
+  <p class="muted">Pick <b>Input Group</b>, <b>Input Type</b>, and <b>Industry &amp; Demand Category</b>. Enter a number (Column D). Negatives &amp; decimals allowed.</p>
+
+  <div class="grid filters card">
+    <div>
+      <label>Input Group</label>
+      <select id="group"><option value="">All</option></select>
+    </div>
+    <div>
+      <label>Input Type</label>
+      <select id="type"><option value="">All</option></select>
+    </div>
+    <div>
+      <label>Industry &amp; Demand Category</label>
+      <select id="category"><option value="">All</option></select>
+    </div>
+  </div>
+
+  <div class="grid row3" style="margin:1rem 0;">
+    <div>
+      <label>Input Value (Column D)</label>
+      <input id="value" type="number" step="any" value="0" placeholder="Enter any number (±)">
+      <div class="muted">Any positive or negative value allowed. Decimals permitted.</div>
+    </div>
+    <div style="display:flex;gap:.6rem;align-items:flex-end">
+      <button id="addBtn" class="primary" disabled>Add</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+      <h2 style="margin:0;font-size:1.1rem">Your Inputs</h2>
+      <button id="downloadBtn" disabled>Download CSV</button>
+    </div>
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>INPUT GROUP</th>
+            <th>INPUT TYPE</th>
+            <th>INDUSTRY &amp; DEMAND CATEGORY</th>
+            <th>INPUT VALUE</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"><tr><td colspan="4" class="muted">No inputs yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+(async function(){
+  // Load your dataset (A–C columns) from /data/inputtable.json
+  const res = await fetch('./data/inputtable.json');
+  const DATA = await res.json();
+
+  // DOM refs
+  const groupSel = document.getElementById('group');
+  const typeSel = document.getElementById('type');
+  const catSel = document.getElementById('category');
+  const valInp = document.getElementById('value');
+  const addBtn = document.getElementById('addBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const dlBtn = document.getElementById('downloadBtn');
+  const tbody = document.getElementById('tbody');
+
+  // Build unique lists
+  function uniq(arr){ return [...new Set(arr)].sort(); }
+  const allGroups = uniq(DATA.map(d => d.group));
+  allGroups.forEach(g => { const o=document.createElement('option'); o.value=o.textContent=g; groupSel.appendChild(o); });
+
+  function syncTypeOptions(){
+    const scoped = groupSel.value ? DATA.filter(d=>d.group===groupSel.value) : DATA;
+    typeSel.innerHTML = '<option value=\"\">All</option>';
+    uniq(scoped.map(d=>d.type)).forEach(t => { const o=document.createElement('option'); o.value=o.textContent=t; typeSel.appendChild(o); });
+  }
+  function syncCategoryOptions(){
+    let scoped = DATA;
+    if(groupSel.value) scoped = scoped.filter(d=>d.group===groupSel.value);
+    if(typeSel.value)  scoped = scoped.filter(d=>d.type===typeSel.value);
+    catSel.innerHTML = '<option value=\"\">All</option>';
+    uniq(scoped.map(d=>d.category)).forEach(c => { const o=document.createElement('option'); o.value=o.textContent=c; catSel.appendChild(o); });
+  }
+
+  groupSel.addEventListener('change', ()=>{ typeSel.value=''; catSel.value=''; syncTypeOptions(); syncCategoryOptions(); validate(); });
+  typeSel.addEventListener('change',  ()=>{ catSel.value=''; syncCategoryOptions(); validate(); });
+  catSel.addEventListener('change',   validate);
+  valInp.addEventListener('input',    validate);
+
+  function validate(){
+    const ok = groupSel.value && typeSel.value && catSel.value && valInp.value !== '' && !Number.isNaN(Number(valInp.value));
+    addBtn.disabled = !ok;
+  }
+
+  // init
+  syncTypeOptions(); syncCategoryOptions(); validate();
+
+  // Entries
+  const entries = [];
+  function render(){
+    tbody.innerHTML = '';
+    if(!entries.length){
+      const tr=document.createElement('tr');
+      const td=document.createElement('td');
+      td.colSpan=4; td.textContent='No inputs yet.'; td.className='muted';
+      tr.appendChild(td); tbody.appendChild(tr);
+    } else {
+      entries.forEach(e=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${e.group}</td><td>${e.type}</td><td>${e.category}</td><td style="text-align:right">${e.value}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    dlBtn.disabled = entries.length===0;
+  }
+
+  addBtn.addEventListener('click', ()=>{
+    entries.unshift({
+      group: groupSel.value,
+      type: typeSel.value,
+      category: catSel.value,
+      value: Number(valInp.value)
+    });
+    valInp.value = '0';
+    render(); validate();
+  });
+
+  clearBtn.addEventListener('click', ()=>{
+    entries.length = 0;
+    render(); validate();
+  });
+
+  dlBtn.addEventListener('click', ()=>{
+    const rows = [
+      ['INPUT GROUP','INPUT TYPE','INDUSTRY & DEMAND CATEGORY','INPUT VALUE'],
+      ...entries.map(e=>[e.group,e.type,e.category,String(e.value)])
+    ];
+    const csv = rows.map(r=>r.map(c=>`"${String(c).replaceAll('"','""')}"`).join(',')).join('\\n');
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='inputs.csv';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
