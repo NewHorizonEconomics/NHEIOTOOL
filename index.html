@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <style>
   :root{--b:#111;--bg:#fff;--muted:#666;--br:#eee}
-  /* Replace your existing body rule with this */
 body{
   font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
   margin:0;  padding:1rem 1.25rem; max-width:none;
@@ -47,7 +46,7 @@ body{
 
   <!-- INPUTS PANEL -->
   <section class="panel active" id="inputs">
-    <p class="muted">Pick <b>Input Group</b>, <b>Input Type</b>, and <b>Industry &amp; Demand Category</b>. Enter Column D value. Negatives &amp; decimals allowed.</p>
+    <p class="muted">Choose inputs: <b>Group</b>, <b>Type</b> <b>Industry or Demand Category</b>. Value. </p>Negatives &amp; decimals allowed.</p>
 
     <div class="grid filters card">
       <div>
@@ -66,7 +65,7 @@ body{
 
     <div class="grid" style="grid-template-columns:2fr 1fr">
       <div>
-        <label>Input Value (Column D)</label>
+        <label>Input Value </label>
         <input id="value" type="number" step="any" value="0" placeholder="Enter any number (±)">
         <div class="muted">Any positive or negative value allowed. Decimals permitted.</div>
       </div>
@@ -79,16 +78,16 @@ body{
 
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-        <h2 style="margin:0;font-size:1.1rem">Your Inputs</h2>
+        <h2 style="margin:0;font-size:1.1rem">Current Inputs</h2>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>INPUT GROUP</th>
-              <th>INPUT TYPE</th>
+              <th>GROUP</th>
+              <th>TYPE</th>
               <th>INDUSTRY &amp; DEMAND CATEGORY</th>
-              <th>INPUT VALUE</th>
+              <th>VALUE</th>
             </tr>
           </thead>
           <tbody id="tbody"><tr><td colspan="4" class="muted">No inputs yet.</td></tr></tbody>
