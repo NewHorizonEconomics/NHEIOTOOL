@@ -3,170 +3,584 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GB INPUT-OUTPUT MODEL INPUTS</title>
+<title>IO Calculator</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <style>
-  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:2rem;max-width:1000px}
-  h1{font-size:1.5rem;margin:0 0 1rem}
+  :root{--b:#111;--bg:#fff;--muted:#666;--br:#eee}
+  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:1.5rem;max-width:1200px}
+  h1{font-size:1.6rem;margin:.25rem 0 1rem}
+  .tabs{display:flex;gap:.5rem;border-bottom:1px solid var(--br);margin-bottom:1rem}
+  .tab{padding:.6rem 1rem;border:1px solid var(--br);border-bottom:none;border-radius:10px 10px 0 0;background:#fafafa;cursor:pointer}
+  .tab.active{background:#fff;border-color:var(--b);color:var(--b)}
+  .panel{display:none}
+  .panel.active{display:block}
   .grid{display:grid;gap:1rem}
-  @media (min-width:800px){.filters{grid-template-columns:1fr 1fr 2fr}.row3{grid-template-columns:2fr 1fr}}
-  select,input{padding:.5rem;border:1px solid #ddd;border-radius:10px}
-  button{padding:.6rem 1rem;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
-  button.primary{background:#111;color:#fff;border-color:#111}
+  @media(min-width:900px){.filters{grid-template-columns:1fr 1fr 2fr}}
+  select,input,button{padding:.6rem;border:1px solid var(--br);border-radius:10px;background:#fff}
+  button{cursor:pointer}
+  button.primary{background:var(--b);color:#fff;border-color:var(--b)}
   button:disabled{opacity:.5;cursor:not-allowed}
+  .card{border:1px solid var(--br);border-radius:12px;padding:1rem;background:#fff}
+  .muted{color:var(--muted);font-size:.92rem}
   table{width:100%;border-collapse:collapse}
-  th,td{padding:.6rem;border-bottom:1px solid #eee;text-align:left}
+  th,td{padding:.55rem;border-bottom:1px solid var(--br);text-align:left;white-space:nowrap}
   th:last-child, td:last-child{text-align:right}
-  .card{border:1px solid #eee;border-radius:12px;padding:1rem}
-  .muted{color:#666;font-size:.9rem}
+  thead th{position:sticky;top:0;background:#f9f9f9}
+  .table-wrap{max-height:420px;overflow:auto;border:1px solid var(--br);border-radius:12px}
+  .kpis{display:grid;gap:.6rem;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kpi{border:1px solid var(--br);border-radius:12px;padding:.8rem;background:#fff}
+  .kpi .v{font-weight:700;font-size:1.15rem}
+  .row{display:flex;gap:.6rem;align-items:flex-end}
 </style>
 </head>
 <body>
-  <h1>GB INPUT OUTPUT MODEL INPUTS</h1>
-  <p class="muted">Pick <b>Input Group</b>, <b>Input Type</b>, and <b>Industry &amp; Demand Category</b>. Enter a number. Negatives &amp; decimals allowed.</p>
+  <h1>IO Calculator</h1>
 
-  <div class="grid filters card">
-    <div>
-      <label>Input Group</label>
-      <select id="group"><option value="">All</option></select>
-    </div>
-    <div>
-      <label>Input Type</label>
-      <select id="type"><option value="">All</option></select>
-    </div>
-    <div>
-      <label>Industry or Demand Category</label>
-      <select id="category"><option value="">All</option></select>
-    </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="inputs">Inputs</button>
+    <button class="tab" data-tab="outputs">Outputs</button>
   </div>
 
-  <div class="grid row3" style="margin:1rem 0;">
-    <div>
-      <label>Input Value </label>
-      <input id="value" type="number" step="any" value="0" placeholder="Enter any number (±)">
-      <div class="muted">Any positive or negative value allowed. Decimals permitted.</div>
-    </div>
-    <div style="display:flex;gap:.6rem;align-items:flex-end">
-      <button id="addBtn" class="primary" disabled>Add</button>
-      <button id="clearBtn">Clear</button>
-    </div>
-  </div>
+  <!-- INPUTS PANEL -->
+  <section class="panel active" id="inputs">
+    <p class="muted">Pick <b>Input Group</b>, <b>Input Type</b>, and <b>Industry &amp; Demand Category</b>. Enter Column D value. Negatives &amp; decimals allowed.</p>
 
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-      <h2 style="margin:0;font-size:1.1rem">Your Inputs</h2>
-      <button id="downloadBtn" disabled>Download CSV</button>
+    <div class="grid filters card">
+      <div>
+        <label>Input Group</label>
+        <select id="group"><option value="">All</option></select>
+      </div>
+      <div>
+        <label>Input Type</label>
+        <select id="type"><option value="">All</option></select>
+      </div>
+      <div>
+        <label>Industry &amp; Demand Category</label>
+        <select id="category"><option value="">All</option></select>
+      </div>
     </div>
-    <div style="overflow:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>INPUT GROUP</th>
-            <th>INPUT TYPE</th>
-            <th>INDUSTRY &amp; DEMAND CATEGORY</th>
-            <th>INPUT VALUE</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"><tr><td colspan="4" class="muted">No inputs yet.</td></tr></tbody>
-      </table>
+
+    <div class="grid" style="grid-template-columns:2fr 1fr">
+      <div>
+        <label>Input Value (Column D)</label>
+        <input id="value" type="number" step="any" value="0" placeholder="Enter any number (±)">
+        <div class="muted">Any positive or negative value allowed. Decimals permitted.</div>
+      </div>
+      <div class="row">
+        <button id="addBtn" class="primary" disabled>Add</button>
+        <button id="clearBtn">Clear</button>
+        <button id="downloadInputsBtn">Download Inputs CSV</button>
+      </div>
     </div>
-  </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <h2 style="margin:0;font-size:1.1rem">Your Inputs</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>INPUT GROUP</th>
+              <th>INPUT TYPE</th>
+              <th>INDUSTRY &amp; DEMAND CATEGORY</th>
+              <th>INPUT VALUE</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"><tr><td colspan="4" class="muted">No inputs yet.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:.8rem">
+        <button id="calcBtn" class="primary">Calculate &rarr; Outputs</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- OUTPUTS PANEL -->
+  <section class="panel" id="outputs">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div>
+        <label>Metric</label>
+        <select id="metric">
+          <option value="gva">GVA</option>
+          <option value="fte">FTE</option>
+          <option value="growth">GROWTH</option>
+        </select>
+      </div>
+      <div class="row">
+        <button id="downloadTableBtn">Download table CSV</button>
+      </div>
+    </div>
+
+    <div class="kpis" style="margin:.8rem 0 1rem">
+      <div class="kpi"><div class="l">Total ΔOutput (£m)</div><div class="v" id="k_total_output">–</div></div>
+      <div class="kpi"><div class="l">Total ΔGVA (£m)</div><div class="v" id="k_total_gva">–</div></div>
+      <div class="kpi"><div class="l">Total ΔFTE</div><div class="v" id="k_total_fte">–</div></div>
+      <div class="kpi"><div class="l">Total Growth (%)</div><div class="v" id="k_total_growth">–</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <h2 style="margin-top:0;font-size:1.1rem">Effects table</h2>
+      <div class="table-wrap">
+        <table id="effectsTable">
+          <thead>
+            <tr>
+              <th>Industry</th>
+              <th>INITIAL</th>
+              <th>DIRECT SUPPLIERS</th>
+              <th>INDIRECT SUPPLIERS</th>
+              <th>INCOME INDUCED</th>
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+          <tbody id="effectsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr;gap:1rem">
+      <div class="card">
+        <h3 style="margin-top:0">ΔGVA by industry</h3>
+        <canvas id="chartGVA" height="360"></canvas>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">ΔFTE by industry</h3>
+        <canvas id="chartFTE" height="360"></canvas>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Growth by industry (incl. Total)</h3>
+        <canvas id="chartGrowth" height="380"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
 <script>
-(async function(){
-  // Load your dataset (A–C columns) from /data/inputtable.json
-  const res = await fetch('./data/inputtable.json');
-  const DATA = await res.json();
+/*** ---------- Small helpers ---------- ***/
+const fmt = {
+  num: (x, dp=1) => (x===0? "0" : (x? Number(x).toLocaleString(undefined,{maximumFractionDigits:dp}) : "–")),
+  money: (x, dp=1) => x==null? "–" : "£" + Number(x).toLocaleString(undefined,{maximumFractionDigits:dp}),
+  pct: (x, dp=2) => x==null? "–" : Number(x).toLocaleString(undefined,{maximumFractionDigits:dp}) + "%"
+};
 
-  // DOM refs
-  const groupSel = document.getElementById('group');
-  const typeSel = document.getElementById('type');
-  const catSel = document.getElementById('category');
-  const valInp = document.getElementById('value');
-  const addBtn = document.getElementById('addBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const dlBtn = document.getElementById('downloadBtn');
-  const tbody = document.getElementById('tbody');
-
-  // Build unique lists
-  function uniq(arr){ return [...new Set(arr)].sort(); }
-  const allGroups = uniq(DATA.map(d => d.group));
-  allGroups.forEach(g => { const o=document.createElement('option'); o.value=o.textContent=g; groupSel.appendChild(o); });
-
-  function syncTypeOptions(){
-    const scoped = groupSel.value ? DATA.filter(d=>d.group===groupSel.value) : DATA;
-    typeSel.innerHTML = '<option value=\"\">All</option>';
-    uniq(scoped.map(d=>d.type)).forEach(t => { const o=document.createElement('option'); o.value=o.textContent=t; typeSel.appendChild(o); });
+const uniq = (arr)=>[...new Set(arr)];
+const sum = (arr)=>arr.reduce((a,b)=>a+(+b||0),0);
+const zeros = n => Array(n).fill(0);
+const dot = (M, v) => {
+  // M: m x n, v: n
+  const m = M.length, n = v.length;
+  const out = new Array(m).fill(0);
+  for (let i=0;i<m;i++){
+    let s=0; const row=M[i];
+    for (let j=0;j<n;j++) s += row[j]*v[j];
+    out[i]=s;
   }
-  function syncCategoryOptions(){
-    let scoped = DATA;
-    if(groupSel.value) scoped = scoped.filter(d=>d.group===groupSel.value);
-    if(typeSel.value)  scoped = scoped.filter(d=>d.type===typeSel.value);
-    catSel.innerHTML = '<option value=\"\">All</option>';
-    uniq(scoped.map(d=>d.category)).forEach(c => { const o=document.createElement('option'); o.value=o.textContent=c; catSel.appendChild(o); });
+  return out;
+};
+const sub = (a,b)=>a.map((x,i)=>x-b[i]);
+const add = (a,b)=>a.map((x,i)=>x+b[i]);
+const mulElem = (a,b)=>a.map((x,i)=>x*b[i]); // elementwise
+const scale = (a,k)=>a.map(x=>x*k);
+
+/*** ---------- Load CSV/JSON data ---------- ***/
+async function getText(p){ const r = await fetch(p); if(!r.ok) throw new Error(p); return r.text(); }
+function parseCSV(text){
+  // simple CSV parser (commas, quoted cells)
+  const rows = [];
+  let i=0, cell='', row=[], inQ=false;
+  while(i<text.length){
+    const c=text[i];
+    if(inQ){
+      if(c==='\"' && text[i+1]==='\"'){ cell+='\"'; i+=2; continue; }
+      if(c==='\"'){ inQ=false; i++; continue; }
+      cell+=c; i++; continue;
+    } else {
+      if(c==='\"'){ inQ=true; i++; continue; }
+      if(c===','){ row.push(cell); cell=''; i++; continue; }
+      if(c==='\n' || c==='\r'){ if(cell!==''||row.length){ row.push(cell); cell=''; if(row.some(x=>x!=='')) rows.push(row); row=[]; } i++; continue; }
+      cell+=c; i++; continue;
+    }
+  }
+  if(cell!==''||row.length){ row.push(cell); if(row.some(x=>x!=='')) rows.push(row); }
+  // header + rows -> objects
+  const header = rows[0].map(h=>h.trim());
+  return rows.slice(1).map(r=>{
+    const o={}; header.forEach((h,idx)=>o[h]=r[idx]!==undefined?r[idx].trim():''); return o;
+  });
+}
+
+async function loadAll(){
+  const [
+    inputList,
+    baseIndCSV, baseDemCSV, fteCSV, sharesCSV, gvaCSV,
+    A_csv, L1_csv, L2_csv
+  ] = await Promise.all([
+    fetch('./data/inputtable.json').then(r=>r.json()),
+    getText('./data/baseline_industries_template.csv'),
+    getText('./data/baseline_demand_template.csv'),
+    getText('./data/fte_per_m_template.csv'),
+    getText('./data/demand_share_vectors_template.csv'),
+    getText('./data/gva_per_m_template.csv'),
+    getText('./data/a_matrix.csv'),
+    getText('./data/L1_matrix.csv'),
+    getText('./data/L2_matrix.csv'),
+  ]);
+
+  const baseInd = parseCSV(baseIndCSV).map(r=>({industry:r.industry, baseline: +r.baseline_gbp_m}));
+  const baseDem = parseCSV(baseDemCSV).map(r=>({demand:r.demand_category, baseline:+r.baseline_gbp_m}));
+  const ftePerM = parseCSV(fteCSV).map(r=>({industry:r.industry, fte:+r.fte_per_m}));
+  const gvaPerM = parseCSV(gvaCSV).map(r=>({industry:r.industry, gva:+r.fte_per_m})); // column header was fte_per_m in your file; treat as GVA/£m
+  const shareRows = parseCSV(sharesCSV);
+
+  const industries = baseInd.map(r=>r.industry);
+  const demandCats = baseDem.map(r=>r.demand);
+  // build shares: demand -> vector[industry]
+  const shares = {};
+  for(const row of shareRows){
+    const d = row['demand_category'];
+    if(!d) continue;
+    const v = industries.map(ind => +row[ind] || 0);
+    shares[d]=v;
   }
 
-  groupSel.addEventListener('change', ()=>{ typeSel.value=''; catSel.value=''; syncTypeOptions(); syncCategoryOptions(); validate(); });
-  typeSel.addEventListener('change',  ()=>{ catSel.value=''; syncCategoryOptions(); validate(); });
-  catSel.addEventListener('change',   validate);
-  valInp.addEventListener('input',    validate);
+  function parseMatrix(csvText){
+    // robust CSV -> numeric 2D array (21x21)
+    const rows = csvText.trim().split(/\r?\n/).map(line=>line.split(',').map(x=>+x));
+    return rows;
+  }
+  const A  = parseMatrix(A_csv);
+  const L1 = parseMatrix(L1_csv);
+  const L2 = parseMatrix(L2_csv);
+
+  // Baseline totals
+  const baselineOutputByInd = baseInd.map(r=>r.baseline||0);
+  const baselineTotalOutput = sum(baselineOutputByInd);
+
+  // fte/gva maps aligned to industries order
+  const fteMap = {}; ftePerM.forEach(x=>{ fteMap[x.industry]=x.fte; });
+  const gvaMap = {}; gvaPerM.forEach(x=>{ gvaMap[x.industry]=x.gva; });
+  const ftePerInd = industries.map(ind => (fteMap[ind] ?? 0));
+  const gvaPerInd = industries.map(ind => (gvaMap[ind] ?? 0));
+
+  return { inputList, industries, demandCats, shares, baselineOutputByInd, baselineTotalOutput, ftePerInd, gvaPerInd, A, L1, L2 };
+}
+
+/*** ---------- Inputs UI ---------- ***/
+const els = {
+  group: document.getElementById('group'),
+  type: document.getElementById('type'),
+  category: document.getElementById('category'),
+  value: document.getElementById('value'),
+  addBtn: document.getElementById('addBtn'),
+  clearBtn: document.getElementById('clearBtn'),
+  tbody: document.getElementById('tbody'),
+  calcBtn: document.getElementById('calcBtn'),
+  metric: document.getElementById('metric'),
+  k_total_output: document.getElementById('k_total_output'),
+  k_total_gva: document.getElementById('k_total_gva'),
+  k_total_fte: document.getElementById('k_total_fte'),
+  k_total_growth: document.getElementById('k_total_growth'),
+  effectsBody: document.getElementById('effectsBody'),
+  downloadInputsBtn: document.getElementById('downloadInputsBtn'),
+  downloadTableBtn: document.getElementById('downloadTableBtn'),
+};
+
+let DATA = null;        // loaded config & matrices
+let entries = [];       // {group,type,category,value}
+
+/*** Tabs ***/
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/*** Load data then init inputs ***/
+loadAll().then(cfg=>{
+  DATA = cfg;
+  initInputs(cfg.inputList);
+}).catch(e=>{
+  alert('Failed to load data files in /data. Check filenames/paths.');
+  console.error(e);
+});
+
+function initInputs(list){
+  const groups = uniq(list.map(d=>d.group)).sort();
+  groups.forEach(g=>{ const o=document.createElement('option'); o.value=o.textContent=g; els.group.appendChild(o); });
+
+  function syncTypes(){
+    const scoped = els.group.value ? list.filter(d=>d.group===els.group.value) : list;
+    els.type.innerHTML = '<option value="">All</option>';
+    uniq(scoped.map(d=>d.type)).sort().forEach(t=>{ const o=document.createElement('option'); o.value=o.textContent=t; els.type.appendChild(o); });
+  }
+  function syncCats(){
+    let scoped = list;
+    if(els.group.value) scoped = scoped.filter(d=>d.group===els.group.value);
+    if(els.type.value)  scoped = scoped.filter(d=>d.type===els.type.value);
+    els.category.innerHTML = '<option value="">All</option>';
+    uniq(scoped.map(d=>d.category)).sort().forEach(c=>{ const o=document.createElement('option'); o.value=o.textContent=c; els.category.appendChild(o); });
+  }
 
   function validate(){
-    const ok = groupSel.value && typeSel.value && catSel.value && valInp.value !== '' && !Number.isNaN(Number(valInp.value));
-    addBtn.disabled = !ok;
+    const ok = els.group.value && els.type.value && els.category.value && els.value.value!=='' && !Number.isNaN(Number(els.value.value));
+    els.addBtn.disabled = !ok;
   }
 
-  // init
-  syncTypeOptions(); syncCategoryOptions(); validate();
+  els.group.addEventListener('change', ()=>{ els.type.value=''; els.category.value=''; syncTypes(); syncCats(); validate(); });
+  els.type.addEventListener('change', ()=>{ els.category.value=''; syncCats(); validate(); });
+  els.category.addEventListener('change', validate);
+  els.value.addEventListener('input', validate);
 
-  // Entries
-  const entries = [];
-  function render(){
-    tbody.innerHTML = '';
-    if(!entries.length){
+  syncTypes(); syncCats(); validate();
+
+  els.addBtn.addEventListener('click', ()=>{
+    entries.unshift({ group: els.group.value, type: els.type.value, category: els.category.value, value: Number(els.value.value) });
+    els.value.value = '0';
+    renderEntries();
+  });
+  els.clearBtn.addEventListener('click', ()=>{ entries=[]; renderEntries(); });
+  els.downloadInputsBtn.addEventListener('click', downloadInputsCSV);
+  renderEntries();
+}
+
+function renderEntries(){
+  const tb = els.tbody;
+  tb.innerHTML = '';
+  if(!entries.length){
+    const tr=document.createElement('tr'); const td=document.createElement('td');
+    td.colSpan=4; td.textContent='No inputs yet.'; td.className='muted'; tr.appendChild(td); tb.appendChild(tr);
+  } else {
+    entries.forEach(e=>{
       const tr=document.createElement('tr');
-      const td=document.createElement('td');
-      td.colSpan=4; td.textContent='No inputs yet.'; td.className='muted';
-      tr.appendChild(td); tbody.appendChild(tr);
-    } else {
-      entries.forEach(e=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML = `<td>${e.group}</td><td>${e.type}</td><td>${e.category}</td><td style="text-align:right">${e.value}</td>`;
-        tbody.appendChild(tr);
-      });
+      tr.innerHTML = `<td>${e.group}</td><td>${e.type}</td><td>${e.category}</td><td style="text-align:right">${fmt.num(e.value,2)}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+}
+
+/*** ---------- Conversion engine ---------- ***/
+function buildInitialVector(){
+  const { industries, demandCats, shares, baselineOutputByInd, ftePerInd } = DATA;
+  const n = industries.length;
+  const idxInd = Object.fromEntries(industries.map((name,i)=>[name,i]));
+  const idxDem = Object.fromEntries(demandCats.map((name,i)=>[name,i]));
+
+  const demandBaseline = Object.fromEntries(DATA.demandCats.map((d,i)=>[d, DATA.baselineOutputByInd[i]])); // placeholder (we won’t use this mapping)
+  // Actually use the dedicated baseline_demand file:
+  const demBase = Object.fromEntries(DATA.demandCats.map((d,i)=>[d,0]));
+  // Better: reconstruct from the parsed CSV:
+  // We'll rebuild from loadAll scope:
+  // build dedicated map in DATA for demand baselines during loadAll:
+}
+
+</script>
+
+<script>
+/*** Re-open script to finish after we have DATA ***/
+function calculateAll(){
+  const { industries, A, L1, L2, baselineOutputByInd, baselineTotalOutput, ftePerInd, gvaPerInd, demandCats } = DATA;
+  const n = industries.length;
+  const idxInd = Object.fromEntries(industries.map((name,i)=>[name,i]));
+  const demBaseMap = DATA._demBaseMap;          // demand_category -> baseline £m
+  const shares = DATA._sharesMap;               // demand_category -> [21 weights]
+
+  // Build INITIAL from entries
+  let INIT = zeros(n);
+
+  for(const e of entries){
+    if(e.group === 'INDUSTRY'){
+      const i = idxInd[e.category];
+      if(i==null) continue;
+      if(e.type === '£m' || e.type === 'GBP' || e.type === 'GBP_m' || e.type === 'GBP millions'){
+        INIT[i] += e.value;
+      } else if(e.type === 'FTE'){
+        const f = ftePerInd[i] || 0;
+        INIT[i] += (f>0 ? (e.value / f) : 0);
+      } else if(e.type === '%'){
+        const base = baselineOutputByInd[i] || 0;
+        INIT[i] += (e.value/100) * base;
+      }
+    } else if(e.group === 'DEMAND'){
+      if(e.type === '£m' || e.type === 'GBP' || e.type === 'GBP_m' || e.type === 'GBP millions'){
+        const w = shares[e.category] || zeros(n);
+        INIT = add(INIT, scale(w, e.value));
+      } else if(e.type === '%'){
+        const base = demBaseMap[e.category] || 0;
+        const pot = (e.value/100) * base;
+        const w = shares[e.category] || zeros(n);
+        INIT = add(INIT, scale(w, pot));
+      } else {
+        // FTE for DEMAND not allowed per your spec; ignore
+      }
     }
-    dlBtn.disabled = entries.length===0;
   }
 
-  addBtn.addEventListener('click', ()=>{
-    entries.unshift({
-      group: groupSel.value,
-      type: typeSel.value,
-      category: catSel.value,
-      value: Number(valInp.value)
+  // Effects
+  const DIRECT = dot(A, INIT);                 // A * INIT
+  const L1INIT = dot(L1, INIT);
+  const L2INIT = dot(L2, INIT);
+  const INDIRECT = sub(sub(L1INIT, INIT), DIRECT);
+  const INCOME  = sub(L2INIT, L1INIT);
+  const TOTAL   = L2INIT;
+
+  // Build metric transforms
+  const toGVA = v => mulElem(v, gvaPerInd);
+  const toFTE = v => mulElem(v, ftePerInd);
+  const toGrowth = v => v.map((x,i)=> baselineOutputByInd[i]>0 ? (100 * x / baselineOutputByInd[i]) : 0);
+
+  // Summaries
+  const sumOutput = {
+    initial: sum(INIT), direct: sum(DIRECT), indirect: sum(INDIRECT), income: sum(INCOME), total: sum(TOTAL)
+  };
+  const sumGVA = {
+    initial: sum(toGVA(INIT)), direct: sum(toGVA(DIRECT)), indirect: sum(toGVA(INDIRECT)), income: sum(toGVA(INCOME)), total: sum(toGVA(TOTAL))
+  };
+  const sumFTE = {
+    initial: sum(toFTE(INIT)), direct: sum(toFTE(DIRECT)), indirect: sum(toFTE(INDIRECT)), income: sum(toFTE(INCOME)), total: sum(toFTE(TOTAL))
+  };
+  const totalGrowthPct = (100 * sumOutput.total / (baselineTotalOutput || 1));
+
+  // KPIs
+  els.k_total_output.textContent = fmt.money(sumOutput.total,1);
+  els.k_total_gva.textContent    = fmt.money(sumGVA.total,1);
+  els.k_total_fte.textContent    = fmt.num(sumFTE.total,0);
+  els.k_total_growth.textContent = fmt.pct(totalGrowthPct,2);
+
+  // Table renderer for selected metric
+  function getMetricVecs(metric){
+    const convert = metric==='gva'? toGVA : metric==='fte'? toFTE : toGrowth;
+    return {
+      initial: convert(INIT),
+      direct:  convert(DIRECT),
+      indirect:convert(INDIRECT),
+      income:  convert(INCOME),
+      total:   convert(TOTAL),
+      totalRowValue: (metric==='gva'? sumGVA.total : metric==='fte'? sumFTE.total : totalGrowthPct)
+    };
+  }
+
+  function renderTable(metric){
+    const mb = getMetricVecs(metric);
+    const body = els.effectsBody;
+    body.innerHTML = '';
+    for(let i=0;i<industries.length;i++){
+      const r = document.createElement('tr');
+      const fmtFn = metric==='growth'? (x)=>fmt.pct(x,2) : (metric==='gva'? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,0));
+      r.innerHTML = `
+        <td>${industries[i]}</td>
+        <td>${fmtFn(mb.initial[i])}</td>
+        <td>${fmtFn(mb.direct[i])}</td>
+        <td>${fmtFn(mb.indirect[i])}</td>
+        <td>${fmtFn(mb.income[i])}</td>
+        <td>${fmtFn(mb.total[i])}</td>
+      `;
+      body.appendChild(r);
+    }
+    // Totals row
+    const tr = document.createElement('tr');
+    tr.style.fontWeight='700';
+    const fmtFn = metric==='growth'? (x)=>fmt.pct(x,2) : (metric==='gva'? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,0));
+    tr.innerHTML = `<td>Total</td><td></td><td></td><td></td><td></td><td>${fmtFn(mb.totalRowValue)}</td>`;
+    body.appendChild(tr);
+  }
+
+  renderTable(els.metric.value);
+
+  // Charts
+  makeCharts(industries, toGVA(TOTAL), toFTE(TOTAL), toGrowth(TOTAL), totalGrowthPct);
+}
+
+// CSV downloads
+function downloadInputsCSV(){
+  const rows = [['INPUT GROUP','INPUT TYPE','INDUSTRY & DEMAND CATEGORY','INPUT VALUE'],
+    ...entries.map(e=>[e.group,e.type,e.category,String(e.value)])];
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replaceAll('"','""')}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a = document.createElement('a'); a.href=url; a.download='inputs.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function downloadTableCSV(){
+  const table = document.getElementById('effectsTable');
+  const rows = [...table.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>td.textContent));
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replaceAll('"','""')}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a = document.createElement('a'); a.href=url; a.download=`effects_${document.getElementById('metric').value}.csv`; a.click(); URL.revokeObjectURL(url);
+}
+els.downloadTableBtn.addEventListener('click', downloadTableCSV);
+
+// metric change
+els.metric.addEventListener('change', ()=>calculateAll());
+
+// calculate
+els.calcBtn.addEventListener('click', ()=>{
+  // switch to outputs tab
+  document.querySelector('.tab[data-tab="outputs"]').click();
+  calculateAll();
+});
+
+/*** Charts ***/
+let chartGVA, chartFTE, chartGrowth;
+function makeCharts(labels, gvaVals, fteVals, growthVals, totalGrowth){
+  const horiz = {indexAxis:'y', responsive:true, maintainAspectRatio:false, scales:{x:{ticks:{callback:v=>v}}, y:{ticks:{autoSkip:false}}}};
+  const ctx1 = document.getElementById('chartGVA').getContext('2d');
+  const ctx2 = document.getElementById('chartFTE').getContext('2d');
+  const ctx3 = document.getElementById('chartGrowth').getContext('2d');
+
+  if(chartGVA) chartGVA.destroy();
+  if(chartFTE) chartFTE.destroy();
+  if(chartGrowth) chartGrowth.destroy();
+
+  chartGVA = new Chart(ctx1, {type:'bar', data:{labels, datasets:[{label:'ΔGVA (£m)', data:gvaVals}]}, options:horiz});
+  chartFTE = new Chart(ctx2, {type:'bar', data:{labels, datasets:[{label:'ΔFTE', data:fteVals}]}, options:horiz});
+
+  const growthLabels = [...labels, 'Total'];
+  const growthData = [...growthVals, totalGrowth];
+  chartGrowth = new Chart(ctx3, {type:'bar', data:{labels:growthLabels, datasets:[{label:'Growth (%)', data:growthData}]}, options:horiz});
+}
+
+/*** Patch: stash demand baselines & shares after loadAll ***/
+loadAll._patched = true;
+</script>
+
+<script>
+/*** Finalize loader to expose demand baselines & shares for the engine ***/
+(async function finalize(){
+  const [
+    baseDemCSV,
+    sharesCSV
+  ] = await Promise.all([
+    fetch('./data/baseline_demand_template.csv').then(r=>r.text()),
+    fetch('./data/demand_share_vectors_template.csv').then(r=>r.text())
+  ]);
+  const baseDem = (function(){ const r = (baseDemCSV||''); return r? (function(){ 
+    const rows = r.trim().split(/\r?\n/); const h = rows.shift().split(',');
+    const out={}; rows.forEach(line=>{ const cols=line.split(','); out[cols[0].trim()] = +cols[1]; }); return out; })() : {};
+  })();
+  const shareRows = (function(){ const r = (sharesCSV||''); return r? (function(){
+    const rows = r.trim().split(/\r?\n/).map(line=>line.split(','));
+    const header = rows.shift();
+    const out={};
+    rows.forEach(cols=>{
+      const d = cols[0].trim();
+      if(!d) return;
+      out[d] = cols.slice(1).map(x=>+x||0);
     });
-    valInp.value = '0';
-    render(); validate();
-  });
+    return out;
+  })(): {}; })();
 
-  clearBtn.addEventListener('click', ()=>{
-    entries.length = 0;
-    render(); validate();
-  });
+  // Wait for main DATA to load
+  const wait = ms=>new Promise(res=>setTimeout(res,ms));
+  while(!DATA) await wait(50);
 
-  dlBtn.addEventListener('click', ()=>{
-    const rows = [
-      ['INPUT GROUP','INPUT TYPE','INDUSTRY & DEMAND CATEGORY','INPUT VALUE'],
-      ...entries.map(e=>[e.group,e.type,e.category,String(e.value)])
-    ];
-    const csv = rows.map(r=>r.map(c=>`"${String(c).replaceAll('"','""')}"`).join(',')).join('\\n');
-    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href=url; a.download='inputs.csv';
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  });
-
-  render();
+  DATA._demBaseMap = baseDem;
+  DATA._sharesMap = shareRows;
 })();
 </script>
+
 </body>
 </html>
