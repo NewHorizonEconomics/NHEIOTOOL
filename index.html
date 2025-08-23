@@ -7,7 +7,11 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <style>
   :root{--b:#111;--bg:#fff;--muted:#666;--br:#eee}
-  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:1.5rem;max-width:1200px}
+  /* Replace your existing body rule with this */
+body{
+  font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  margin:0;  padding:1rem 1.25rem; max-width:none;
+}
   h1{font-size:1.6rem;margin:.25rem 0 1rem}
   .tabs{display:flex;gap:.5rem;border-bottom:1px solid var(--br);margin-bottom:1rem}
   .tab{padding:.6rem 1rem;border:1px solid var(--br);border-bottom:none;border-radius:10px 10px 0 0;background:#fafafa;cursor:pointer}
@@ -113,7 +117,6 @@
     </div>
 
     <div class="kpis" style="margin:.8rem 0 1rem">
-      <div class="kpi"><div class="l">Total ΔOutput (£m)</div><div class="v" id="k_total_output">–</div></div>
       <div class="kpi"><div class="l">Total ΔGVA (£m)</div><div class="v" id="k_total_gva">–</div></div>
       <div class="kpi"><div class="l">Total ΔFTE</div><div class="v" id="k_total_fte">–</div></div>
       <div class="kpi"><div class="l">Total Growth (%)</div><div class="v" id="k_total_growth">–</div></div>
@@ -139,19 +142,20 @@
     </div>
 
     <div class="grid" style="grid-template-columns:1fr;gap:1rem">
-      <div class="card">
-        <h3 style="margin-top:0">ΔGVA by industry</h3>
-        <canvas id="chartGVA" height="360"></canvas>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">ΔFTE by industry</h3>
-        <canvas id="chartFTE" height="360"></canvas>
-      </div>
-      <div class="card">
-        <h3 style="margin-top:0">Growth by industry (incl. Total)</h3>
-        <canvas id="chartGrowth" height="380"></canvas>
-      </div>
-    </div>
+  <div class="card" style="height:520px">
+    <h3 style="margin-top:0">ΔGVA by industry</h3>
+    <canvas id="chartGVA"></canvas>
+  </div>
+  <div class="card" style="height:520px">
+    <h3 style="margin-top:0">ΔFTE by industry</h3>
+    <canvas id="chartFTE"></canvas>
+  </div>
+  <div class="card" style="height:560px">
+    <h3 style="margin-top:0">Growth by industry (incl. Total)</h3>
+    <canvas id="chartGrowth"></canvas>
+  </div>
+</div>
+
   </section>
 
   <!-- Chart.js -->
@@ -446,7 +450,6 @@ function calculateAll(){
   const totalGrowthPct = (100 * sumOutput.total / (baselineTotalOutput || 1));
 
   // KPIs
-  els.k_total_output.textContent = fmt.money(sumOutput.total,1);
   els.k_total_gva.textContent    = fmt.money(sumGVA.total,1);
   els.k_total_fte.textContent    = fmt.num(sumFTE.total,0);
   els.k_total_growth.textContent = fmt.pct(totalGrowthPct,2);
@@ -464,30 +467,41 @@ function calculateAll(){
     };
   }
 
-  function renderTable(metric){
-    const mb = getMetricVecs(metric);
-    const body = els.effectsBody;
-    body.innerHTML = '';
-    for(let i=0;i<industries.length;i++){
-      const r = document.createElement('tr');
-      const fmtFn = metric==='growth'? (x)=>fmt.pct(x,2) : (metric==='gva'? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,0));
-      r.innerHTML = `
-        <td>${industries[i]}</td>
-        <td>${fmtFn(mb.initial[i])}</td>
-        <td>${fmtFn(mb.direct[i])}</td>
-        <td>${fmtFn(mb.indirect[i])}</td>
-        <td>${fmtFn(mb.income[i])}</td>
-        <td>${fmtFn(mb.total[i])}</td>
-      `;
-      body.appendChild(r);
-    }
-    // Totals row
-    const tr = document.createElement('tr');
-    tr.style.fontWeight='700';
-    const fmtFn = metric==='growth'? (x)=>fmt.pct(x,2) : (metric==='gva'? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,0));
-    tr.innerHTML = `<td>Total</td><td></td><td></td><td></td><td></td><td>${fmtFn(mb.totalRowValue)}</td>`;
-    body.appendChild(tr);
+function renderTable(metric){
+  const mb = getMetricVecs(metric);
+  const body = els.effectsBody;
+  body.innerHTML = '';
+
+  // ➜ 1 d.p. for GVA, 1 d.p. for FTE, 2 d.p. for Growth
+  const fmtFn = metric==='growth'
+    ? (x)=>fmt.pct(x, 2)
+    : (metric==='gva'
+        ? (x)=>fmt.money(x, 1)
+        : (x)=>fmt.num(x, 1));   // FTE now 1 d.p.
+
+  for(let i=0;i<industries.length;i++){
+    const r = document.createElement('tr');
+    r.innerHTML = `
+      <td>${industries[i]}</td>
+      <td>${fmtFn(mb.initial[i])}</td>
+      <td>${fmtFn(mb.direct[i])}</td>
+      <td>${fmtFn(mb.indirect[i])}</td>
+      <td>${fmtFn(mb.income[i])}</td>
+      <td>${fmtFn(mb.total[i])}</td>
+    `;
+    body.appendChild(r);
   }
+
+  const tr = document.createElement('tr');
+  tr.style.fontWeight='700';
+  tr.innerHTML = `<td>Total</td><td></td><td></td><td></td><td></td><td>${
+    metric==='growth' ? fmt.pct(mb.totalRowValue, 2)
+                      : (metric==='gva' ? fmt.money(mb.totalRowValue, 1)
+                                         : fmt.num(mb.totalRowValue, 1))
+  }</td>`;
+  body.appendChild(tr);
+}
+
 
   renderTable(els.metric.value);
 
@@ -525,8 +539,40 @@ els.calcBtn.addEventListener('click', ()=>{
 
 /*** Charts ***/
 let chartGVA, chartFTE, chartGrowth;
+
+function chartOpts(unitFormatter){
+  return {
+    indexAxis:'y',
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{ display:false },
+      tooltip:{
+        callbacks:{
+          label(ctx){
+            const v = ctx.raw;
+            return ' ' + unitFormatter(v);
+          }
+        }
+      }
+    },
+    elements:{
+      bar:{ barThickness:12, maxBarThickness:14, borderRadius:4 }
+    },
+    scales:{
+      y:{
+        ticks:{ autoSkip:false, maxRotation:0, minRotation:0 },
+        grid:{ display:false }
+      },
+      x:{
+        ticks:{ callback:value=>value }
+      }
+    },
+    layout:{ padding:{ right:8 } }
+  };
+}
+
 function makeCharts(labels, gvaVals, fteVals, growthVals, totalGrowth){
-  const horiz = {indexAxis:'y', responsive:true, maintainAspectRatio:false, scales:{x:{ticks:{callback:v=>v}}, y:{ticks:{autoSkip:false}}}};
   const ctx1 = document.getElementById('chartGVA').getContext('2d');
   const ctx2 = document.getElementById('chartFTE').getContext('2d');
   const ctx3 = document.getElementById('chartGrowth').getContext('2d');
@@ -535,13 +581,28 @@ function makeCharts(labels, gvaVals, fteVals, growthVals, totalGrowth){
   if(chartFTE) chartFTE.destroy();
   if(chartGrowth) chartGrowth.destroy();
 
-  chartGVA = new Chart(ctx1, {type:'bar', data:{labels, datasets:[{label:'ΔGVA (£m)', data:gvaVals}]}, options:horiz});
-  chartFTE = new Chart(ctx2, {type:'bar', data:{labels, datasets:[{label:'ΔFTE', data:fteVals}]}, options:horiz});
+  chartGVA = new Chart(ctx1, {
+    type:'bar',
+    data:{ labels, datasets:[{ data:gvaVals }] },
+    options: chartOpts(v=>fmt.money(v,1))
+  });
+
+  chartFTE = new Chart(ctx2, {
+    type:'bar',
+    data:{ labels, datasets:[{ data:fteVals }] },
+    options: chartOpts(v=>fmt.num(v,1))
+  });
 
   const growthLabels = [...labels, 'Total'];
   const growthData = [...growthVals, totalGrowth];
-  chartGrowth = new Chart(ctx3, {type:'bar', data:{labels:growthLabels, datasets:[{label:'Growth (%)', data:growthData}]}, options:horiz});
+
+  chartGrowth = new Chart(ctx3, {
+    type:'bar',
+    data:{ labels:growthLabels, datasets:[{ data:growthData }] },
+    options: chartOpts(v=>fmt.pct(v,2))
+  });
 }
+
 
 /*** Patch: stash demand baselines & shares after loadAll ***/
 loadAll._patched = true;
