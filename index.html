@@ -48,7 +48,10 @@ body{
 
   <!-- INPUTS PANEL -->
   <section class="panel active" id="inputs">
-    <p class="muted">Choose inputs: <b>Group</b>, <b>Type</b> <b>Industry<b></b> or<b></b> Demand Category</b>. </p>Negatives &amp; decimals allowed.</p>
+  <p class="muted">
+  Choose inputs: <b>Group</b>, <b>Type</b>, <b>Industry</b> or <b>Demand Category</b>.
+  Negatives &amp; decimals allowed.
+</p>
 
     <div class="grid filters card">
       <div>
@@ -99,49 +102,50 @@ body{
   </section>
 
   <!-- OUTPUTS PANEL -->
+<section class="panel" id="outputs">
+  <div class="kpis" style="margin:.8rem 0 1rem">
+    <div class="kpi"><div class="l">Total ΔGVA (£m)</div><div class="v" id="k_total_gva">–</div></div>
+    <div class="kpi"><div class="l">Total ΔFTE</div><div class="v" id="k_total_fte">–</div></div>
+    <div class="kpi"><div class="l">Total Growth (%)</div><div class="v" id="k_total_growth">–</div></div>
+  </div>
 
-    <div class="kpis" style="margin:.8rem 0 1rem">
-      <div class="kpi"><div class="l">Total ΔGVA (£m)</div><div class="v" id="k_total_gva">–</div></div>
-      <div class="kpi"><div class="l">Total ΔFTE</div><div class="v" id="k_total_fte">–</div></div>
-      <div class="kpi"><div class="l">Total Growth (%)</div><div class="v" id="k_total_growth">–</div></div>
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0;font-size:1.1rem">Effects table</h2>
+      <div class="row">
+        <label style="margin-right:.5rem">Metric</label>
+        <select id="metric">
+          <option value="gva">GVA</option>
+          <option value="fte">FTE</option>
+          <option value="growth">GROWTH</option>
+        </select>
+        <button id="downloadTableBtn" style="margin-left:.75rem">Download table CSV</button>
+      </div>
     </div>
 
-    <div class="card" style="margin-bottom:1rem">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h2 style="margin:0;font-size:1.1rem">Effects table</h2>
-    <div>
-      <label style="margin-right:.5rem">Metric</label>
-      <select id="metric">
-        <option value="gva">GVA</option>
-        <option value="fte">FTE</option>
-        <option value="growth">GROWTH</option>
-      </select>
+    <div class="table-wrap" style="margin-top:.5rem">
+      <table id="effectsTable">
+        <thead>
+          <tr>
+            <th>Industry</th>
+            <th>INITIAL</th>
+            <th>DIRECT SUPPLIERS</th>
+            <th>INDIRECT SUPPLIERS</th>
+            <th>INCOME INDUCED</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody id="effectsBody"></tbody>
+      </table>
     </div>
   </div>
-  <div class="table-wrap" style="margin-top:.5rem">
-    <table id="effectsTable">
-      <thead>
-        <tr>
-          <th>Industry</th>
-          <th>INITIAL</th>
-          <th>DIRECT SUPPLIERS</th>
-          <th>INDIRECT SUPPLIERS</th>
-          <th>INCOME INDUCED</th>
-          <th>TOTAL</th>
-        </tr>
-      </thead>
-      <tbody id="effectsBody"></tbody>
-    </table>
+
+  <div class="card" style="height:560px">
+    <h3 id="chartTitle" style="margin-top:0">ΔGVA by industry</h3>
+    <canvas id="chartMain"></canvas>
   </div>
-</div>
+</section>
 
-
- <div class="card" style="height:560px">
-  <h3 id="chartTitle" style="margin-top:0">ΔGVA by industry</h3>
-  <canvas id="chartMain"></canvas>
-</div>
-
-  </section>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -265,7 +269,6 @@ const els = {
   addBtn: document.getElementById('addBtn'),
   clearBtn: document.getElementById('clearBtn'),
   tbody: document.getElementById('tbody'),
-  calcBtn: document.getElementById('calcBtn'),
   metric: document.getElementById('metric'),
   k_total_output: document.getElementById('k_total_output'),
   k_total_gva: document.getElementById('k_total_gva'),
