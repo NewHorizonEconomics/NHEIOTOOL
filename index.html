@@ -35,6 +35,48 @@ body {
   .kpi{border:1px solid var(--br);border-radius:12px;padding:.8rem;background:#fff}
   .kpi .v{font-weight:700;font-size:1.15rem}
   .row{display:flex;gap:.6rem;align-items:flex-end}
+.effects-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.effects-title{
+  margin:0;
+  font-size:1.1rem;      /* same size as you wanted */
+  font-weight:700;
+  letter-spacing:.01em;
+}
+
+.effects-controls{
+  display:flex;
+  align-items:center;    /* vertically center label + select + button */
+  gap:.5rem;
+}
+
+.metric-label{
+  margin:0 .5rem 0 0;
+  font-size:1.1rem;      /* matches INDUSTRY EFFECTS */
+  font-weight:700;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+
+.metric-select{
+  padding:.4rem .6rem;   /* keeps options inside box */
+  font-size:1rem;
+  line-height:1.2;
+  height:2.25rem;        /* gives consistent control height */
+}
+
+.btn{
+  padding:.6rem 1rem;
+  border:1px solid var(--br);
+  border-radius:10px;
+  background:#fff;
+  cursor:pointer;
+}
+
 </style>
 </head>
 <body>
