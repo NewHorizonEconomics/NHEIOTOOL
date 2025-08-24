@@ -93,27 +93,10 @@ body{
           <tbody id="tbody"><tr><td colspan="4" class="muted">No inputs yet.</td></tr></tbody>
         </table>
       </div>
-      <div class="row" style="margin-top:.8rem">
-        <button id="calcBtn" class="primary">Calculate &rarr; Outputs</button>
-      </div>
-    </div>
+      
   </section>
 
   <!-- OUTPUTS PANEL -->
-  <section class="panel" id="outputs">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div>
-        <label>Metric</label>
-        <select id="metric">
-          <option value="gva">GVA</option>
-          <option value="fte">FTE</option>
-          <option value="growth">GROWTH</option>
-        </select>
-      </div>
-      <div class="row">
-        <button id="downloadTableBtn">Download table CSV</button>
-      </div>
-    </div>
 
     <div class="kpis" style="margin:.8rem 0 1rem">
       <div class="kpi"><div class="l">Total ΔGVA (£m)</div><div class="v" id="k_total_gva">–</div></div>
@@ -122,37 +105,38 @@ body{
     </div>
 
     <div class="card" style="margin-bottom:1rem">
-      <h2 style="margin-top:0;font-size:1.1rem">Effects table</h2>
-      <div class="table-wrap">
-        <table id="effectsTable">
-          <thead>
-            <tr>
-              <th>Industry</th>
-              <th>INITIAL</th>
-              <th>DIRECT SUPPLIERS</th>
-              <th>INDIRECT SUPPLIERS</th>
-              <th>INCOME INDUCED</th>
-              <th>TOTAL</th>
-            </tr>
-          </thead>
-          <tbody id="effectsBody"></tbody>
-        </table>
-      </div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2 style="margin:0;font-size:1.1rem">Effects table</h2>
+    <div>
+      <label style="margin-right:.5rem">Metric</label>
+      <select id="metric">
+        <option value="gva">GVA</option>
+        <option value="fte">FTE</option>
+        <option value="growth">GROWTH</option>
+      </select>
     </div>
+  </div>
+  <div class="table-wrap" style="margin-top:.5rem">
+    <table id="effectsTable">
+      <thead>
+        <tr>
+          <th>Industry</th>
+          <th>INITIAL</th>
+          <th>DIRECT SUPPLIERS</th>
+          <th>INDIRECT SUPPLIERS</th>
+          <th>INCOME INDUCED</th>
+          <th>TOTAL</th>
+        </tr>
+      </thead>
+      <tbody id="effectsBody"></tbody>
+    </table>
+  </div>
+</div>
 
-    <div class="grid" style="grid-template-columns:1fr;gap:1rem">
-  <div class="card" style="height:520px">
-    <h3 style="margin-top:0">ΔGVA by industry</h3>
-    <canvas id="chartGVA"></canvas>
-  </div>
-  <div class="card" style="height:520px">
-    <h3 style="margin-top:0">ΔFTE by industry</h3>
-    <canvas id="chartFTE"></canvas>
-  </div>
-  <div class="card" style="height:560px">
-    <h3 style="margin-top:0">Growth by industry (incl. Total)</h3>
-    <canvas id="chartGrowth"></canvas>
-  </div>
+
+ <div class="card" style="height:560px">
+  <h3 id="chartTitle" style="margin-top:0">ΔGVA by industry</h3>
+  <canvas id="chartMain"></canvas>
 </div>
 
   </section>
@@ -504,8 +488,9 @@ function renderTable(metric){
 
   renderTable(els.metric.value);
 
-  // Charts
-  makeCharts(industries, toGVA(TOTAL), toFTE(TOTAL), toGrowth(TOTAL), totalGrowthPct);
+// Chart (only one shown, based on metric)
+renderChart(els.metric.value, industries, toGVA(TOTAL), toFTE(TOTAL), toGrowth(TOTAL), totalGrowthPct);
+
 }
 
 // CSV downloads
@@ -529,15 +514,10 @@ els.downloadTableBtn.addEventListener('click', downloadTableCSV);
 // metric change
 els.metric.addEventListener('change', ()=>calculateAll());
 
-// calculate
-els.calcBtn.addEventListener('click', ()=>{
-  // switch to outputs tab
-  document.querySelector('.tab[data-tab="outputs"]').click();
-  calculateAll();
-});
+
 
 /*** Charts ***/
-let chartGVA, chartFTE, chartGrowth;
+let chartMain;
 
 function chartOpts(unitFormatter){
   return {
@@ -546,59 +526,43 @@ function chartOpts(unitFormatter){
     maintainAspectRatio:false,
     plugins:{
       legend:{ display:false },
-      tooltip:{
-        callbacks:{
-          label(ctx){
-            const v = ctx.raw;
-            return ' ' + unitFormatter(v);
-          }
-        }
-      }
+      tooltip:{ callbacks:{ label:ctx=>' ' + unitFormatter(ctx.raw) } }
     },
-    elements:{
-      bar:{ barThickness:12, maxBarThickness:14, borderRadius:4 }
-    },
+    elements:{ bar:{ barThickness:12, maxBarThickness:14, borderRadius:4 } },
     scales:{
-      y:{
-        ticks:{ autoSkip:false, maxRotation:0, minRotation:0 },
-        grid:{ display:false }
-      },
-      x:{
-        ticks:{ callback:value=>value }
-      }
+      y:{ ticks:{ autoSkip:false, maxRotation:0, minRotation:0 }, grid:{ display:false } },
+      x:{ ticks:{ callback:value=>value } }
     },
     layout:{ padding:{ right:8 } }
   };
 }
 
-function makeCharts(labels, gvaVals, fteVals, growthVals, totalGrowth){
-  const ctx1 = document.getElementById('chartGVA').getContext('2d');
-  const ctx2 = document.getElementById('chartFTE').getContext('2d');
-  const ctx3 = document.getElementById('chartGrowth').getContext('2d');
+function renderChart(metric, labels, gvaVals, fteVals, growthVals, totalGrowth){
+  const ctx = document.getElementById('chartMain').getContext('2d');
+  if(chartMain) chartMain.destroy();
 
-  if(chartGVA) chartGVA.destroy();
-  if(chartFTE) chartFTE.destroy();
-  if(chartGrowth) chartGrowth.destroy();
+  let data, title, fmtUnit;
+  if(metric === 'gva'){
+    data = gvaVals;
+    title = 'ΔGVA by industry';
+    fmtUnit = v => fmt.money(v,1);
+  } else if(metric === 'fte'){
+    data = fteVals;
+    title = 'ΔFTE by industry';
+    fmtUnit = v => fmt.num(v,1);
+  } else {
+    // growth: add final 'Total' bar
+    labels = [...labels, 'Total'];
+    data = [...growthVals, totalGrowth];
+    title = 'Growth by industry (incl. Total)';
+    fmtUnit = v => fmt.pct(v,2);
+  }
 
-  chartGVA = new Chart(ctx1, {
+  document.getElementById('chartTitle').textContent = title;
+  chartMain = new Chart(ctx, {
     type:'bar',
-    data:{ labels, datasets:[{ data:gvaVals }] },
-    options: chartOpts(v=>fmt.money(v,1))
-  });
-
-  chartFTE = new Chart(ctx2, {
-    type:'bar',
-    data:{ labels, datasets:[{ data:fteVals }] },
-    options: chartOpts(v=>fmt.num(v,1))
-  });
-
-  const growthLabels = [...labels, 'Total'];
-  const growthData = [...growthVals, totalGrowth];
-
-  chartGrowth = new Chart(ctx3, {
-    type:'bar',
-    data:{ labels:growthLabels, datasets:[{ data:growthData }] },
-    options: chartOpts(v=>fmt.pct(v,2))
+    data:{ labels, datasets:[{ data }] },
+    options: chartOpts(fmtUnit)
   });
 }
 
