@@ -308,14 +308,14 @@ function initInputs(list){
 
   function syncTypes(){
     const scoped = els.group.value ? list.filter(d=>d.group===els.group.value) : list;
-    els.type.innerHTML = '<option value="">All</option>';
+    els.type.innerHTML = '<option value="">Select...</option>';
     uniq(scoped.map(d=>d.type)).sort().forEach(t=>{ const o=document.createElement('option'); o.value=o.textContent=t; els.type.appendChild(o); });
   }
   function syncCats(){
     let scoped = list;
     if(els.group.value) scoped = scoped.filter(d=>d.group===els.group.value);
     if(els.type.value)  scoped = scoped.filter(d=>d.type===els.type.value);
-    els.category.innerHTML = '<option value="">All</option>';
+    els.category.innerHTML = '<option value="">Select...</option>';
     uniq(scoped.map(d=>d.category)).sort().forEach(c=>{ const o=document.createElement('option'); o.value=o.textContent=c; els.category.appendChild(o); });
   }
 
