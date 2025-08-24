@@ -9,7 +9,9 @@
   :root{--b:#111;--bg:#fff;--muted:#666;--br:#eee}
 body{
   font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  margin:0;  padding:1rem 1.25rem; max-width:none;
+  margin:0;
+  padding:1rem 1.25rem;
+  max-width:none;
 }
   h1{font-size:1.6rem;margin:.25rem 0 1rem}
   .tabs{display:flex;gap:.5rem;border-bottom:1px solid var(--br);margin-bottom:1rem}
@@ -30,7 +32,7 @@ body{
   th:last-child, td:last-child{text-align:right}
   thead th{position:sticky;top:0;background:#f9f9f9}
   .table-wrap{max-height:420px;overflow:auto;border:1px solid var(--br);border-radius:12px}
-  .kpis{display:grid;gap:.6rem;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kpis{display:grid;gap:.6rem;grid-template-columns:repeat(3,minmax(0,1fr))}
   .kpi{border:1px solid var(--br);border-radius:12px;padding:.8rem;background:#fff}
   .kpi .v{font-weight:700;font-size:1.15rem}
   .row{display:flex;gap:.6rem;align-items:flex-end}
@@ -326,14 +328,17 @@ function initInputs(list){
   syncTypes(); syncCats(); validate();
 
   els.addBtn.addEventListener('click', ()=>{
-    entries.unshift({ group: els.group.value, type: els.type.value, category: els.category.value, value: Number(els.value.value) });
-    els.value.value = '0';
-    renderEntries();
-  });
-  els.clearBtn.addEventListener('click', ()=>{ entries=[]; renderEntries(); });
-  els.downloadInputsBtn.addEventListener('click', downloadInputsCSV);
+  entries.unshift({ group: els.group.value, type: els.type.value, category: els.category.value, value: Number(els.value.value) });
+  els.value.value = '0';
   renderEntries();
-}
+  calculateAll(); // <-- auto-calc after every add
+});
+
+els.clearBtn.addEventListener('click', ()=>{
+  entries = [];
+  renderEntries();
+  calculateAll(); // <-- auto-calc after clear
+});
 
 function renderEntries(){
   const tb = els.tbody;
