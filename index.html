@@ -108,18 +108,25 @@ body {
   </div>
 
   <div class="card" style="margin-bottom:1rem">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h2 style="margin:0;font-size:1.1rem">INDUSTRY EFFECTS</h2>
-      <div class="row">
-       <h2 style="margin:0 .75rem 0 0; text-transform:uppercase;">Metric</h2>
-<select id="metric">…</select>
-          <option value="gva">GVA</option>
-          <option value="fte">FTE</option>
-          <option value="growth">GROWTH</option>
-        </select>
-        <button id="downloadTableBtn" style="margin-left:.75rem">Download table CSV</button>
-      </div>
+  <div class="effects-header">
+    <h2 class="effects-title">INDUSTRY EFFECTS</h2>
+    <div class="effects-controls">
+      <label for="metric" class="metric-label">METRIC</label>
+      <select id="metric" class="metric-select">
+        <option value="gva">GVA</option>
+        <option value="fte">FTE</option>
+        <option value="growth">GROWTH</option>
+      </select>
+      <button id="downloadTableBtn" class="btn">Download table CSV</button>
     </div>
+  </div>
+
+  <!-- keep your table markup below as-is -->
+  <div class="table-wrap" style="margin-top:.5rem">
+    <table id="effectsTable">…</table>
+  </div>
+</div>
+
     <div class="table-wrap" style="margin-top:.5rem">
       <table id="effectsTable">
         <thead>
