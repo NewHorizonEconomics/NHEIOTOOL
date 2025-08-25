@@ -80,7 +80,7 @@ body {
 </style>
 </head>
 <body>
-  <h1>IO Calculator</h1>
+  <h1>NHE GB INPUT-OOUTPUT CALCULATOR</h1>
 
   <div class="tabs">
     <button class="tab active" data-tab="inputs">Inputs</button>
@@ -89,10 +89,7 @@ body {
 
   <!-- INPUTS PANEL -->
   <section class="panel active" id="inputs">
-  <p class="muted">
-  <b>SELECT MODEL INPUTS:</b>
-</p>
-
+  
     <div class="grid filters card">
       <div>
         <label>GROUP</label>
@@ -108,17 +105,19 @@ body {
       </div>
     </div>
 
-    <div class="grid" style="grid-template-columns:2fr 1fr">
-      <div>
-        <label>INPUT VALUE </label>
-        <input id="value" type="number" step="any" value="0" placeholder="Enter any number (±)">
-       </div>
-      <div class="row">
-        <button id="addBtn" class="primary" disabled>Add</button>
-        <button id="clearBtn">Clear</button>
-        <button id="downloadInputsBtn">Download Inputs CSV</button>
-      </div>
+  <div class="card">
+  <div class="grid" style="grid-template-columns:2fr 1fr; align-items:end;">
+    <div>
+      <label>INPUT VALUE</label>
+      <input id="value" type="number" step="any" value="0" placeholder="Enter any number (±)">
     </div>
+    <div class="row">
+      <button id="addBtn" class="primary" disabled>Add</button>
+      <button id="clearBtn">Clear</button>
+      <button id="downloadInputsBtn">Download Inputs CSV</button>
+    </div>
+  </div>
+</div>
 
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
