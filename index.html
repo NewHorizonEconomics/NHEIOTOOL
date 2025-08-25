@@ -155,7 +155,7 @@ h1 {
 
     <div class="card" style="margin-bottom:1rem">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
-        <h2 style="margin:0;font-size:1.1rem">Current Inputs</h2>
+        <h2 style="margin:0;font-size:1.1rem">CURRENT INPUTS</h2>
       </div>
       <div class="table-wrap">
         <table>
@@ -214,7 +214,7 @@ h1 {
   </div>
 
   <div class="card" style="height:560px">
-    <h3 id="chartTitle" style="margin-top:0">ΔGVA by industry</h3>
+    <h3 id="chartTitle" style="margin-top:0">ΔGVA (£m) BY INDUSTRY</h3>
     <canvas id="chartMain"></canvas>
   </div>
 
@@ -628,17 +628,17 @@ function renderChart(metric, labels, gvaVals, fteVals, growthVals, totalGrowth){
   let data, title, fmtUnit;
   if(metric === 'gva'){
     data = gvaVals;
-    title = 'ΔGVA by industry';
+    title = 'ΔGVA (£m) BY INDUSTRY';
     fmtUnit = v => fmt.money(v,1);
   } else if(metric === 'fte'){
     data = fteVals;
-    title = 'ΔFTE by industry';
+    title = 'ΔEMPLOYMENT (FTE jobs) BY INDUSTRY';
     fmtUnit = v => fmt.num(v,1);
   } else {
     // growth: add final 'Total' bar
     labels = [...labels, 'Total'];
     data = [...growthVals, totalGrowth];
-    title = 'Growth by industry (incl. Total)';
+    title = 'GROWTH (%) BY INDUSTRY AND GB';
     fmtUnit = v => fmt.pct(v,2);
   }
 
