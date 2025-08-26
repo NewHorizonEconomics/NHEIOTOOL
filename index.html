@@ -606,11 +606,8 @@ function renderTable(metric){
   body.appendChild(tr);
 }
 
-
-  
-
-// Chart (only one shown, based on metric)
-renderChart(els.metric.value, industries, toGVA(TOTAL), toFTE(TOTAL), toGrowth(TOTAL), totalGrowthPct);
+  renderTable(els.metric.value);
+  renderChart(els.metric.value, industries, toGVA(TOTAL), toFTE(TOTAL), toGrowth(TOTAL), totalGrowthPct);
 
 }
 
