@@ -522,13 +522,13 @@ function calculateAll(){
   els.k_total_growth.textContent = fmt.pct(totalGrowthPct,2);
 
   // Table renderer for selected metric
-  function getMetricVecs(metric){
+ function getMetricVecs(metric){
   const toGVA = v => mulElem(v, gvaPerInd);
   const toFTE = v => mulElem(v, ftePerInd);
   const toGrowth = v => v.map((x,i)=> baselineOutputByInd[i]>0 ? (100 * x / baselineOutputByInd[i]) : 0);
 
-  // Converted vectors for the selected metric
-  const convert = metric==='gva'? toGVA : metric==='fte'? toFTE : toGrowth;
+  const convert = metric==='gva' ? toGVA : metric==='fte' ? toFTE : toGrowth;
+
   const mb = {
     initial: convert(INIT),
     direct:  convert(DIRECT),
@@ -537,18 +537,17 @@ function calculateAll(){
     total:   convert(TOTAL)
   };
 
-  // Column totals for the selected metric
-  let totals;
-  if (metric === 'gva') {
-    totals = {
+  // column totals (growth = weighted by baseline total)
+  if (metric === 'gva'){
+    mb.totals = {
       initial: sum(toGVA(INIT)),
       direct:  sum(toGVA(DIRECT)),
       indirect:sum(toGVA(INDIRECT)),
       income:  sum(toGVA(INCOME)),
       total:   sum(toGVA(TOTAL))
     };
-  } else if (metric === 'fte') {
-    totals = {
+  } else if (metric === 'fte'){
+    mb.totals = {
       initial: sum(toFTE(INIT)),
       direct:  sum(toFTE(DIRECT)),
       indirect:sum(toFTE(INDIRECT)),
@@ -556,18 +555,17 @@ function calculateAll(){
       total:   sum(toFTE(TOTAL))
     };
   } else {
-    // GROWTH: weighted totals by baseline output (per your rule)
-    const F = x => (100 * x / (baselineTotalOutput || 1));
-    totals = {
-      initial: F(sum(INIT)),
-      direct:  F(sum(DIRECT)),
-      indirect:F(sum(INDIRECT)),
-      income:  F(sum(INCOME)),
-      total:   F(sum(TOTAL))
+    const W = (vec) => 100 * (sum(vec) / (baselineTotalOutput || 1));
+    mb.totals = {
+      initial: W(INIT),
+      direct:  W(DIRECT),
+      indirect:W(INDIRECT),
+      income:  W(INCOME),
+      total:   W(TOTAL)
     };
   }
 
-  return { ...mb, totals };
+  return mb;
 }
 
 
@@ -576,11 +574,10 @@ function renderTable(metric){
   const body = els.effectsBody;
   body.innerHTML = '';
 
-  // ➜ 1 d.p. for GVA, 1 d.p. for FTE, 2 d.p. for Growth
- const fmtCell = metric==='growth'
-  ? (x)=>fmt.pct(x,2)
-  : (metric==='gva' ? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,1));
-   // FTE now 1 d.p.
+  // 1 d.p. for GVA/FTE, 2 d.p. for Growth
+  const fmtCell = metric==='growth'
+    ? (x)=>fmt.pct(x,2)
+    : (metric==='gva' ? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,1));
 
   for(let i=0;i<industries.length;i++){
     const r = document.createElement('tr');
@@ -595,26 +592,22 @@ function renderTable(metric){
     body.appendChild(r);
   }
 
-// Totals row
-const tr = document.createElement('tr');
-tr.style.fontWeight = '700';
-const fmtCell = metric==='growth'
-  ? (x)=>fmt.pct(x,2)
-  : (metric==='gva' ? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,1));
-
-tr.innerHTML = `
-  <td>Total</td>
-  <td>${fmtCell(mb.totals.initial)}</td>
-  <td>${fmtCell(mb.totals.direct)}</td>
-  <td>${fmtCell(mb.totals.indirect)}</td>
-  <td>${fmtCell(mb.totals.income)}</td>
-  <td>${fmtCell(mb.totals.total)}</td>
-`;
-body.appendChild(tr);
+  // Totals row (fills all columns)
+  const tr = document.createElement('tr');
+  tr.style.fontWeight = '700';
+  tr.innerHTML = `
+    <td>Total</td>
+    <td>${fmtCell(mb.totals.initial)}</td>
+    <td>${fmtCell(mb.totals.direct)}</td>
+    <td>${fmtCell(mb.totals.indirect)}</td>
+    <td>${fmtCell(mb.totals.income)}</td>
+    <td>${fmtCell(mb.totals.total)}</td>
+  `;
+  body.appendChild(tr);
+}
 
 
-
-  renderTable(els.metric.value);
+  
 
 // Chart (only one shown, based on metric)
 renderChart(els.metric.value, industries, toGVA(TOTAL), toFTE(TOTAL), toGrowth(TOTAL), totalGrowthPct);
