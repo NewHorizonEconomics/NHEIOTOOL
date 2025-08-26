@@ -523,16 +523,53 @@ function calculateAll(){
 
   // Table renderer for selected metric
   function getMetricVecs(metric){
-    const convert = metric==='gva'? toGVA : metric==='fte'? toFTE : toGrowth;
-    return {
-      initial: convert(INIT),
-      direct:  convert(DIRECT),
-      indirect:convert(INDIRECT),
-      income:  convert(INCOME),
-      total:   convert(TOTAL),
-      totalRowValue: (metric==='gva'? sumGVA.total : metric==='fte'? sumFTE.total : totalGrowthPct)
+  const toGVA = v => mulElem(v, gvaPerInd);
+  const toFTE = v => mulElem(v, ftePerInd);
+  const toGrowth = v => v.map((x,i)=> baselineOutputByInd[i]>0 ? (100 * x / baselineOutputByInd[i]) : 0);
+
+  // Converted vectors for the selected metric
+  const convert = metric==='gva'? toGVA : metric==='fte'? toFTE : toGrowth;
+  const mb = {
+    initial: convert(INIT),
+    direct:  convert(DIRECT),
+    indirect:convert(INDIRECT),
+    income:  convert(INCOME),
+    total:   convert(TOTAL)
+  };
+
+  // Column totals for the selected metric
+  let totals;
+  if (metric === 'gva') {
+    totals = {
+      initial: sum(toGVA(INIT)),
+      direct:  sum(toGVA(DIRECT)),
+      indirect:sum(toGVA(INDIRECT)),
+      income:  sum(toGVA(INCOME)),
+      total:   sum(toGVA(TOTAL))
+    };
+  } else if (metric === 'fte') {
+    totals = {
+      initial: sum(toFTE(INIT)),
+      direct:  sum(toFTE(DIRECT)),
+      indirect:sum(toFTE(INDIRECT)),
+      income:  sum(toFTE(INCOME)),
+      total:   sum(toFTE(TOTAL))
+    };
+  } else {
+    // GROWTH: weighted totals by baseline output (per your rule)
+    const F = x => (100 * x / (baselineTotalOutput || 1));
+    totals = {
+      initial: F(sum(INIT)),
+      direct:  F(sum(DIRECT)),
+      indirect:F(sum(INDIRECT)),
+      income:  F(sum(INCOME)),
+      total:   F(sum(TOTAL))
     };
   }
+
+  return { ...mb, totals };
+}
+
 
 function renderTable(metric){
   const mb = getMetricVecs(metric);
@@ -540,33 +577,41 @@ function renderTable(metric){
   body.innerHTML = '';
 
   // ➜ 1 d.p. for GVA, 1 d.p. for FTE, 2 d.p. for Growth
-  const fmtFn = metric==='growth'
-    ? (x)=>fmt.pct(x, 2)
-    : (metric==='gva'
-        ? (x)=>fmt.money(x, 1)
-        : (x)=>fmt.num(x, 1));   // FTE now 1 d.p.
+ const fmtCell = metric==='growth'
+  ? (x)=>fmt.pct(x,2)
+  : (metric==='gva' ? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,1));
+   // FTE now 1 d.p.
 
   for(let i=0;i<industries.length;i++){
     const r = document.createElement('tr');
     r.innerHTML = `
       <td>${industries[i]}</td>
-      <td>${fmtFn(mb.initial[i])}</td>
-      <td>${fmtFn(mb.direct[i])}</td>
-      <td>${fmtFn(mb.indirect[i])}</td>
-      <td>${fmtFn(mb.income[i])}</td>
-      <td>${fmtFn(mb.total[i])}</td>
+      <td>${fmtCell(mb.initial[i])}</td>
+      <td>${fmtCell(mb.direct[i])}</td>
+      <td>${fmtCell(mb.indirect[i])}</td>
+      <td>${fmtCell(mb.income[i])}</td>
+      <td>${fmtCell(mb.total[i])}</td>
     `;
     body.appendChild(r);
   }
 
-  const tr = document.createElement('tr');
-  tr.style.fontWeight='700';
-  tr.innerHTML = `<td>Total</td><td></td><td></td><td></td><td></td><td>${
-    metric==='growth' ? fmt.pct(mb.totalRowValue, 2)
-                      : (metric==='gva' ? fmt.money(mb.totalRowValue, 1)
-                                         : fmt.num(mb.totalRowValue, 1))
-  }</td>`;
-  body.appendChild(tr);
+// Totals row
+const tr = document.createElement('tr');
+tr.style.fontWeight = '700';
+const fmtCell = metric==='growth'
+  ? (x)=>fmt.pct(x,2)
+  : (metric==='gva' ? (x)=>fmt.money(x,1) : (x)=>fmt.num(x,1));
+
+tr.innerHTML = `
+  <td>Total</td>
+  <td>${fmtCell(mb.totals.initial)}</td>
+  <td>${fmtCell(mb.totals.direct)}</td>
+  <td>${fmtCell(mb.totals.indirect)}</td>
+  <td>${fmtCell(mb.totals.income)}</td>
+  <td>${fmtCell(mb.totals.total)}</td>
+`;
+body.appendChild(tr);
+
 }
 
 
